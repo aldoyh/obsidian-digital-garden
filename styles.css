@@ -506,3 +506,31 @@ h4 {
 	color: var(--interactive-accent);
 	text-decoration: underline;
 }
+
+/* Premium Styles Section */
+.dg-preset-description {
+	margin-top: -8px;
+	margin-bottom: 16px;
+	padding: 12px;
+	background: var(--background-secondary-alt);
+	border-radius: 6px;
+	border-left: 3px solid var(--interactive-accent);
+	font-style: italic;
+}
+
+/* Premium styles section header icon */
+.dg-settings-section h3 .svg-icon[data-icon="sparkles"] {
+	color: var(--color-yellow);
+}
+
+/* Premium toggle highlight when enabled */
+.dg-settings-section
+	.setting-item:has(input[type="checkbox"]:checked)
+	.setting-item-name {
+	color: var(--interactive-accent);
+}
+
+/* Style preset dropdown styling */
+.dg-settings-section select {
+	min-width: 180px;
+}

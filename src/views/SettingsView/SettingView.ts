@@ -35,6 +35,11 @@ import Logger from "js-logger";
 import ForestrySettings from "./ForestrySettings.svelte";
 import { PublishPlatform } from "src/models/PublishPlatform";
 import PublishPlatformConnectionFactory from "../../repositoryConnection/PublishPlatformConnectionFactory";
+import {
+	getPremiumStylePresets,
+	buildPremiumStyles,
+	type PremiumStylePreset,
+} from "../../utils/PremiumStyles";
 
 interface IObsidianTheme {
 	name: string;
@@ -1295,6 +1300,220 @@ export default class SettingView {
 		} catch {
 			console.error("Error loading style settings plugin");
 		}
+
+		// Premium Styles Section
+		const premiumSection = themeModal.contentEl.createDiv({
+			cls: "dg-settings-section",
+		});
+
+		premiumSection
+			.createEl("h3", { text: "Premium Styles" })
+			.prepend(this.getIcon("sparkles"));
+
+		const premiumDesc = premiumSection.createEl("p", {
+			cls: "setting-item-description",
+		});
+
+		premiumDesc.setText(
+			"Transform your garden with professionally crafted design presets. These styles make your content look polished and unique.",
+		);
+
+		// Initialize premiumStyles if not present
+		if (!this.settings.premiumStyles) {
+			this.settings.premiumStyles = {
+				enabled: false,
+				preset: "minimal-elegance",
+				enableAnimations: true,
+				enableCustomFonts: true,
+				customAccentColor: "",
+			};
+		}
+
+		// Enable/Disable Premium Styles
+		new Setting(premiumSection)
+			.setName("Enable Premium Styles")
+			.setDesc(
+				"Apply premium styling to your garden. This will override the Style Settings CSS.",
+			)
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.settings.premiumStyles.enabled)
+					.onChange(async (value) => {
+						this.settings.premiumStyles.enabled = value;
+						await this.saveSettings();
+
+						// Show/hide other premium settings based on toggle
+						presetSetting.settingEl.style.display = value
+							? "flex"
+							: "none";
+
+						animationsSetting.settingEl.style.display = value
+							? "flex"
+							: "none";
+
+						fontsSetting.settingEl.style.display = value
+							? "flex"
+							: "none";
+
+						accentSetting.settingEl.style.display = value
+							? "flex"
+							: "none";
+					});
+			});
+
+		// Preset Selection
+		const presetSetting = new Setting(premiumSection)
+			.setName("Style Preset")
+			.setDesc("Choose a design style that matches your content.");
+
+		const presets = getPremiumStylePresets();
+
+		presetSetting.addDropdown((dd) => {
+			for (const preset of presets) {
+				dd.addOption(preset.id, preset.name);
+			}
+			dd.setValue(this.settings.premiumStyles.preset);
+
+			dd.onChange(async (value) => {
+				this.settings.premiumStyles.preset =
+					value as PremiumStylePreset;
+				await this.saveSettings();
+				// Update description
+				const selectedPreset = presets.find((p) => p.id === value);
+
+				if (selectedPreset && presetDescEl) {
+					presetDescEl.setText(selectedPreset.description);
+				}
+			});
+		});
+
+		// Add description for currently selected preset
+		const presetDescEl = premiumSection.createEl("p", {
+			cls: "setting-item-description dg-preset-description",
+		});
+
+		const currentPreset = presets.find(
+			(p) => p.id === this.settings.premiumStyles.preset,
+		);
+		presetDescEl.setText(currentPreset?.description ?? "");
+
+		// Enable Animations
+		const animationsSetting = new Setting(premiumSection)
+			.setName("Enable Animations")
+			.setDesc("Include subtle entrance animations and hover effects.")
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.settings.premiumStyles.enableAnimations)
+					.onChange(async (value) => {
+						this.settings.premiumStyles.enableAnimations = value;
+						await this.saveSettings();
+					});
+			});
+
+		// Enable Custom Fonts
+		const fontsSetting = new Setting(premiumSection)
+			.setName("Enable Custom Fonts")
+			.setDesc(
+				"Load premium fonts (Inter, Merriweather, JetBrains Mono). Disable for faster loading.",
+			)
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.settings.premiumStyles.enableCustomFonts)
+					.onChange(async (value) => {
+						this.settings.premiumStyles.enableCustomFonts = value;
+						await this.saveSettings();
+					});
+			});
+
+		// Custom Accent Color
+		const accentSetting = new Setting(premiumSection)
+			.setName("Custom Accent Color")
+			.setDesc(
+				"Override the default accent color (leave empty to use theme default).",
+			)
+			.addText((text) => {
+				text.setPlaceholder("#6366f1");
+				text.setValue(this.settings.premiumStyles.customAccentColor);
+				text.inputEl.type = "color";
+				text.inputEl.style.width = "60px";
+				text.inputEl.style.height = "30px";
+				text.inputEl.style.padding = "2px";
+				text.inputEl.style.cursor = "pointer";
+
+				text.onChange(async (value) => {
+					this.settings.premiumStyles.customAccentColor = value;
+					await this.saveSettings();
+				});
+			})
+			.addExtraButton((btn) => {
+				btn.setIcon("reset");
+				btn.setTooltip("Clear accent color");
+
+				btn.onClick(async () => {
+					this.settings.premiumStyles.customAccentColor = "";
+					await this.saveSettings();
+				});
+			});
+
+		// Apply Premium Styles Button
+		new Setting(premiumSection).addButton((btn) => {
+			btn.setButtonText("Apply Premium Styles to Site");
+			btn.setCta();
+
+			btn.onClick(async () => {
+				if (!this.settings.premiumStyles.enabled) {
+					new Notice("Enable Premium Styles first");
+
+					return;
+				}
+
+				new Notice("Applying premium styles...");
+
+				// Build the CSS from the selected preset and options
+				const premiumCSS = buildPremiumStyles({
+					preset: this.settings.premiumStyles.preset,
+					enableAnimations:
+						this.settings.premiumStyles.enableAnimations,
+					enableCustomFonts:
+						this.settings.premiumStyles.enableCustomFonts,
+					accentColor:
+						this.settings.premiumStyles.customAccentColor ||
+						undefined,
+				});
+
+				// Set the CSS to styleSettingsCss
+				this.settings.styleSettingsCss = premiumCSS;
+				this.settings.styleSettingsBodyClasses = `premium-styles premium-${this.settings.premiumStyles.preset}`;
+
+				await this.saveSiteSettingsAndUpdateEnv(
+					this.app.metadataCache,
+					this.settings,
+					this.saveSettings,
+				);
+
+				new Notice("Premium styles applied to your garden!");
+			});
+		});
+
+		// Hide settings if premium styles are disabled
+		const isPremiumEnabled = this.settings.premiumStyles.enabled;
+
+		presetSetting.settingEl.style.display = isPremiumEnabled
+			? "flex"
+			: "none";
+
+		animationsSetting.settingEl.style.display = isPremiumEnabled
+			? "flex"
+			: "none";
+
+		fontsSetting.settingEl.style.display = isPremiumEnabled
+			? "flex"
+			: "none";
+
+		accentSetting.settingEl.style.display = isPremiumEnabled
+			? "flex"
+			: "none";
+		presetDescEl.style.display = isPremiumEnabled ? "block" : "none";
 
 		// Theme Settings Section
 		const themeSection = themeModal.contentEl.createDiv({

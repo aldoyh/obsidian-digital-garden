@@ -1,5 +1,15 @@
 import { ILogLevel } from "js-logger";
 import { PublishPlatform } from "./PublishPlatform";
+import type { PremiumStylePreset } from "../utils/PremiumStyles";
+
+/** Premium style configuration for stunning garden designs */
+export interface PremiumStyleSettings {
+	enabled: boolean;
+	preset: PremiumStylePreset;
+	enableAnimations: boolean;
+	enableCustomFonts: boolean;
+	customAccentColor: string;
+}
 
 /** Saved to data.json, changing requires a migration */
 export default interface DigitalGardenSettings {
@@ -83,6 +93,9 @@ export default interface DigitalGardenSettings {
 		canvasZoomHint: string;
 		canvasResetHint: string;
 	};
+
+	/** Premium styling configuration for stunning garden designs */
+	premiumStyles: PremiumStyleSettings;
 
 	ENABLE_DEVELOPER_TOOLS?: boolean;
 	devPluginPath?: string;

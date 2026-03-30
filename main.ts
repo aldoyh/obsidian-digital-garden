@@ -111,6 +111,14 @@ const DEFAULT_SETTINGS: DigitalGardenSettings = {
 		canvasResetHint: "",
 	},
 
+	premiumStyles: {
+		enabled: false,
+		preset: "minimal-elegance",
+		enableAnimations: true,
+		enableCustomFonts: true,
+		customAccentColor: "",
+	},
+
 	logLevel: undefined,
 };
 
