@@ -38,7 +38,7 @@ jobs:
         run: |
           mkdir -p garden/src/site/notes
           find src/dg-testVault -maxdepth 1 -name "*.md" | while IFS= read -r f; do
-            if grep -q "dg-publish: true" "$f"; then
+            if grep -qE '^dg-publish:\s*true' "$f"; then
               cp "$f" garden/src/site/notes/
             fi
           done
@@ -47,7 +47,9 @@ jobs:
         run: |
           mkdir -p garden/src/site/img/user
           find src/dg-testVault -type f \( -name "*.png" -o -name "*.webp" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" \) | while IFS= read -r f; do
-            cp "$f" garden/src/site/img/user/ 2>/dev/null || true
+            if ! cp "$f" garden/src/site/img/user/; then
+              echo "Warning: failed to copy asset $f" >&2
+            fi
           done
 
       - name: Configure garden base URL for GitHub Pages
@@ -70,7 +72,12 @@ jobs:
           elif [ -d garden/_site ]; then
             echo "path=./garden/_site" >> "$GITHUB_OUTPUT"
           else
-            output=$(find ./garden -maxdepth 3 -name "index.html" | head -1 | xargs dirname 2>/dev/null || echo "./garden/_site")
+            # Fall back to finding any index.html within the garden directory
+            output=$(find ./garden -maxdepth 3 -name "index.html" | head -1 | xargs -r dirname 2>/dev/null)
+            if [ -z "$output" ]; then
+              echo "Warning: could not locate build output; defaulting to ./garden/_site" >&2
+              output="./garden/_site"
+            fi
             echo "path=$output" >> "$GITHUB_OUTPUT"
           fi
 
