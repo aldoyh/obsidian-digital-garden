@@ -109,7 +109,7 @@ export default class SettingView {
 
 		linkDiv.createEl("a", {
 			text: "here.",
-			href: "https://dg-docs.ole.dev/getting-started/01-getting-started/",
+			href: "https://docs.forestry.md/getting-started/01-getting-started/",
 		});
 
 		new Setting(this.settingsRootElement)
@@ -210,6 +210,25 @@ export default class SettingView {
 					});
 			});
 
+		this.settingsRootElement
+			.createEl("h3", { text: "Local Export" })
+			.prepend(this.getIcon("folder-output"));
+
+		new Setting(this.settingsRootElement)
+			.setName("Local garden folder path")
+			.setDesc(
+				"Absolute path to your local digital garden folder. Used by the 'Export Garden to Local Folder' command.",
+			)
+			.addText((text) => {
+				text.setPlaceholder("/path/to/your/digitalgarden")
+					.setValue(this.settings.localExportPath ?? "")
+					.onChange(async (value) => {
+						this.settings.localExportPath = value;
+						await this.saveSettings();
+					});
+				text.inputEl.style.width = "300px";
+			});
+
 		prModal.titleEl.createEl("h1", "Site template settings");
 	}
 
@@ -250,7 +269,7 @@ export default class SettingView {
 
 		linkDiv.createEl("a", {
 			text: "here.",
-			href: "https://dg-docs.ole.dev/getting-started/03-note-settings/",
+			href: "https://docs.forestry.md/getting-started/03-note-settings/",
 		});
 
 		new Setting(this.settingsRootElement)
@@ -1884,7 +1903,7 @@ export default class SettingView {
 			.createEl("div", { cls: "dg-docs-link" })
 			.createEl("a", {
 				text: "Documentation on note icons",
-				href: "https://dg-docs.ole.dev/advanced/note-specific-settings/#note-icons",
+				href: "https://docs.forestry.md/advanced/note-specific-settings/#note-icons",
 			});
 
 		new Setting(noteIconsSection)

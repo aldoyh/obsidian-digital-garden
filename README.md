@@ -11,7 +11,7 @@ Turn your Obsidian vault into a beautiful website. Free, open-source, and entire
 
 ## 📚 Documentation
 
-**[dg-docs.ole.dev](https://dg-docs.ole.dev/)** — Full setup guide, configuration options, and examples.
+**[docs.forestry.md](https://docs.forestry.md/)** — Full setup guide, configuration options, and examples.
 
 ## Why a Digital Garden?
 
@@ -73,14 +73,14 @@ Check out [gardens built by the community](https://vaults.obsidian-community.com
 
 **⏱️ ~10 minutes to set up.** It takes a bit of work, but when you're done you'll have a digital garden in which you are in control of every part of it, and can customize it as you see fit. Which is what makes digital gardens so delightful.
 
-> 💡 **Want a simpler setup?** [Forestry.md](https://forestry.md) offers one-click hosting with no GitHub required. Currently in invite-only alpha.
+> 💡 **Want a simpler setup?** [Forestry.md](https://forestry.md) offers one-click hosting with no GitHub required. Currently in open beta.
 
 Lets get started:
 
 1. First off, you will need a GitHub account. If you don't have this, create one [here](https://github.com/signup).
 2. You'll also need a Vercel account. You can sign up using your GitHub account [here](https://vercel.com/signup)
 3. Open [this repo](https://github.com/oleeskild/digitalgarden), and click the blue "Deploy to Vercel" button. This will open Vercel which in turn will create a copy of this repository in your GitHub accont. Give it a fitting name like 'my-digital-garden'. Follow the steps to publish your site to the internet.
-4. Now you need to create an access token so that the plugin can add new notes to the repo on your behalf. Detailed instructions with images are available in the [docs](https://dg-docs.ole.dev/advanced/fine-grained-access-token/). Use a [Fine grained personal access token](https://github.com/settings/personal-access-tokens/new) with the following settings:
+4. Now you need to create an access token so that the plugin can add new notes to the repo on your behalf. Detailed instructions with images are available in the [docs](https://docs.forestry.md/advanced/fine-grained-access-token/). Use a [Fine grained personal access token](https://github.com/settings/personal-access-tokens/new) with the following settings:
 		- Token Name:  _`YYYY-Digital Garden`_
 		- Expiration: _Custom / a year / whatever you want._
 		- Description: _Publishing content to the digital garden._
@@ -163,6 +163,16 @@ If you want to do any changes that aren't overwritten when updating the template
 ---
 
 
+## Local Export
+
+You can export your garden to a local folder instead of publishing to GitHub. This is useful for self-hosting, previewing your garden locally, or running the site without Vercel/Netlify.
+
+1. In the plugin settings, scroll to **Local Export** and set the path to your local [digitalgarden](https://github.com/oleeskild/digitalgarden) folder
+2. Open the command palette and run **"Export Garden to Local Folder"**
+3. Run `npm run dev` in your digitalgarden folder to preview the site locally
+
+This exports all notes marked with `dg-publish: true` and their images to the local folder, ready for the Eleventy build. Note that publish status tracking and diffing are not available with local export — it's a full export each time.
+
 ## Local development
 
 NOTE: this plugin contains a testing vault at `src/dg-testVault`, which is recommended for local development.
@@ -186,7 +196,18 @@ GITHUB_USERNAME=
 FORESTRY_BASE_URL=https://api.forestry.md/app
 FORESTRY_PAGE_NAME=
 FORESTRY_API_KEY=
+
+# Local export (for development or self-hosting)
+LOCAL_GARDEN_PATH=../digitalgarden
 ```
+
+### Local dev workflow
+
+To preview plugin changes in the actual garden site:
+
+1. `npm run dev` in this repo (builds plugin, copies to test vault)
+2. Open test vault in Obsidian, run **"Export Garden to Local Folder"**
+3. `npm run dev` in the `digitalgarden/` folder (serves garden with hot reload)
 
 Note: this repository uses prettier and eslint to enforce code formatting and style. It is recommended to install these to your IDE for automatic formatting and error highlighting.
 
