@@ -1,0 +1,94 @@
+name: Deploy Sample Garden to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout plugin repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Clone digitalgarden template
+        run: git clone --depth 1 https://github.com/oleeskild/digitalgarden.git garden
+
+      - name: Install garden dependencies
+        working-directory: ./garden
+        run: npm install
+
+      - name: Copy published sample notes from test vault
+        run: |
+          mkdir -p garden/src/site/notes
+          find src/dg-testVault -maxdepth 1 -name "*.md" | while IFS= read -r f; do
+            if grep -q "dg-publish: true" "$f"; then
+              cp "$f" garden/src/site/notes/
+            fi
+          done
+
+      - name: Copy sample assets from test vault
+        run: |
+          mkdir -p garden/src/site/img/user
+          find src/dg-testVault -type f \( -name "*.png" -o -name "*.webp" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" \) | while IFS= read -r f; do
+            cp "$f" garden/src/site/img/user/ 2>/dev/null || true
+          done
+
+      - name: Configure garden base URL for GitHub Pages
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER}"
+          repo="${GITHUB_REPOSITORY#*/}"
+          base_url="https://${owner}.github.io/${repo}"
+          printf 'BASE_URL=%s\n' "$base_url" > garden/.env
+          printf 'GARDEN_BASE_URL=%s\n' "$base_url" >> garden/.env
+
+      - name: Build garden site
+        working-directory: ./garden
+        run: npm run build
+
+      - name: Locate build output directory
+        id: build-output
+        run: |
+          if [ -d garden/dist ]; then
+            echo "path=./garden/dist" >> "$GITHUB_OUTPUT"
+          elif [ -d garden/_site ]; then
+            echo "path=./garden/_site" >> "$GITHUB_OUTPUT"
+          else
+            output=$(find ./garden -maxdepth 3 -name "index.html" | head -1 | xargs dirname 2>/dev/null || echo "./garden/_site")
+            echo "path=$output" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.build-output.outputs.path }}
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

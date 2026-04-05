@@ -68,6 +68,7 @@ Check out [gardens built by the community](https://vaults.obsidian-community.com
 -   **Vercel** - One-click deploy, automatic builds
 -   **Netlify** - Alternative hosting with similar features
 -   **[Forestry.md](https://forestry.md)** - Managed hosting for non-technical users (no GitHub setup required)
+-   **GitHub Pages** - Free hosting directly from your GitHub repository (see [deploy-pages.yml](.github/workflows/deploy-pages.yml))
 
 ## Initial Setup
 
@@ -116,6 +117,26 @@ Congratulations, you now have your own digital garden, hosted free of charge!
 You can now start adding links as you usually would in Obisidan, with double square brackets like this: [[Some Other Note]], to the note that you just published. You can also link to a specific header by using the syntax [[Some Other Note#A Header]]. Remember to also publish the notes your are linking to as this will not happen automatically. This is by design. You are always in control of what notes you actually want to publish. If you did not publish a linked note, the link will simply lead to a site telling the user that this note does not exist.
 
 ![new-note-demo](https://raw.githubusercontent.com/oleeskild/obsidian-digital-garden/main/img/new-note-demo.gif)
+
+## Alternative: GitHub Pages (Free, Built-in to GitHub)
+
+You can deploy your digital garden to [GitHub Pages](https://pages.github.com/) for free, directly from your repository. This repository includes a ready-made workflow at [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) that automatically builds and deploys the sample garden (from `src/dg-testVault`) on every push to `master`.
+
+**To enable GitHub Pages for your own garden repository:**
+
+1. In your garden repository on GitHub, go to **Settings → Pages**
+2. Under **Source**, select **GitHub Actions**
+3. Add the [`deploy-pages.yml`](.github/workflows/deploy-pages.yml) workflow to your garden repository's `.github/workflows/` directory
+4. Push any change to trigger the workflow — your site will be published at `https://<your-username>.github.io/<repo-name>/`
+
+The workflow:
+- Clones the [digitalgarden](https://github.com/oleeskild/digitalgarden) Eleventy template
+- Copies all notes marked `dg-publish: true` into `src/site/notes/`
+- Copies associated image assets into `src/site/img/user/`
+- Sets the correct `BASE_URL` / `GARDEN_BASE_URL` for GitHub Pages
+- Builds the Eleventy site and deploys it via `actions/deploy-pages`
+
+> 💡 The `workflow_dispatch` trigger lets you redeploy manually from the **Actions** tab at any time.
 
 ## Alternative: Forestry.md (No GitHub Required)
 
